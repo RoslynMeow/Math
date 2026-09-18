@@ -3,8 +3,13 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>RoslynMeow.Math.Bit</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/RoslynMeow/Math</RepositoryUrl>
     <PackageProjectUrl>https://github.com/RoslynMeow/Math</PackageProjectUrl>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="True" PackagePath="\" />
+  </ItemGroup>
 
 </Project>
