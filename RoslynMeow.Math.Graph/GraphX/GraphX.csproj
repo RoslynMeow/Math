@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+	  <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <PackageId>RoslynMeow.Math.Graph</PackageId>
+    <RepositoryUrl>https://github.com/RoslynMeow/Math</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/RoslynMeow/Math</PackageProjectUrl>
+  </PropertyGroup>
+</Project>

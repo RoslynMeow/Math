@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '要发布的版本号，不含前导 v（例如 2.1.0）'
+        required: true
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |-
+            8.0.x
+            9.0.x
+
+      - name: Resolve version from tag
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            version="${{ github.event.inputs.version }}"
+            tag="v${version}"
+          else
+            tag="${GITHUB_REF_NAME}"
+            version="${tag#v}"
+          fi
+          echo "value=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "Publishing version: ${version} (tag ${tag})"
+
+      # 项目清单：修改 csproj 的文件名/路径后，请同步更新这里。
+      - name: Pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ./artifacts
+          projects=(
+            "RoslynMeow.Math.Bit/Bit.csproj"
+            "RoslynMeow.Math.Fraction/Fraction.csproj"
+            "RoslynMeow.Math.Graph/GraphX/GraphX.csproj"
+            "RoslynMeow.Math.Number/BigNumber/BigNumber.csproj"
+          )
+          for proj in "${projects[@]}"; do
+            echo "::group::pack ${proj}"
+            dotnet pack "${proj}" \
+              -c Release \
+              -o ./artifacts \
+              -p:Version="${{ steps.version.outputs.value }}" \
+              -p:GeneratePackageOnBuild=false
+            echo "::endgroup::"
+          done
+          ls -l ./artifacts
+
+      - name: Push to GitHub Packages
+        shell: bash
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          for pkg in ./artifacts/*.nupkg; do
+            echo "Pushing ${pkg}"
+            dotnet nuget push "${pkg}" \
+              --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+              --api-key "${NUGET_AUTH_TOKEN}" \
+              --skip-duplicate
+          done
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          prerelease_flag=""
+          if [[ "${{ steps.version.outputs.value }}" == *-* ]]; then
+            prerelease_flag="--prerelease"
+          fi
+          gh release create "${{ steps.version.outputs.tag }}" \
+            ./artifacts/*.nupkg \
+            --title "${{ steps.version.outputs.tag }}" \
+            --generate-notes \
+            $prerelease_flag
