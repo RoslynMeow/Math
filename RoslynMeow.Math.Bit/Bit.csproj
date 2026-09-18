@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>RoslynMeow.Math.Bit</PackageId>
+    <RepositoryUrl>https://github.com/RoslynMeow/Math</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/RoslynMeow/Math</PackageProjectUrl>
+  </PropertyGroup>
+
+</Project>
