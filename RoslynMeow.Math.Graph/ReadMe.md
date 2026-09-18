@@ -1,5 +1,20 @@
 ﻿# RoslynMeow.Math.Graph — 概览与使用
 
+[中文](ReadMe.md) | [English](ReadMe.en.md)
+
+[![GitHub Packages](https://img.shields.io/badge/GitHub%20Packages-RoslynMeow.Math.Graph-2ea44f?logo=nuget)](https://github.com/RoslynMeow/Math/pkgs/nuget/RoslynMeow.Math.Graph)
+[![Release](https://img.shields.io/github/v/release/RoslynMeow/Math?include_prereleases&sort=semver&label=release)](https://github.com/RoslynMeow/Math/releases)
+[![License](https://img.shields.io/github/license/RoslynMeow/Math)](https://github.com/RoslynMeow/Math/blob/main/LICENSE)
+[![.NET](https://img.shields.io/badge/.NET-netstandard2.0-512BD4)](https://dotnet.microsoft.com)
+
+## 目录
+
+- [仓库组织（更新）](#仓库组织更新)
+- [解析器设计（新增）](#解析器设计新增)
+- [快速示例：如何解析 JSON / XML / CSV](#快速示例如何解析-json--xml--csv)
+- [使用示例](#使用示例)
+- [测试](#测试)
+
 ## 仓库组织（更新）
 
 - `GraphX/` - 库源码（目标：.NET Standard 2.0）

@@ -1,5 +1,23 @@
 ﻿# RoslynMeow.Math.Number
 
+[中文](ReadMe.md) | [English](ReadMe.en.md)
+
+[![GitHub Packages](https://img.shields.io/badge/GitHub%20Packages-RoslynMeow.Math.Number-2ea44f?logo=nuget)](https://github.com/RoslynMeow/Math/pkgs/nuget/RoslynMeow.Math.Number)
+[![Release](https://img.shields.io/github/v/release/RoslynMeow/Math?include_prereleases&sort=semver&label=release)](https://github.com/RoslynMeow/Math/releases)
+[![License](https://img.shields.io/github/license/RoslynMeow/Math)](https://github.com/RoslynMeow/Math/blob/main/LICENSE)
+[![.NET](https://img.shields.io/badge/.NET-netstandard2.1-512BD4)](https://dotnet.microsoft.com)
+
+## 目录
+
+- [简介](#简介)
+- [主要特性（概览）](#主要特性概览)
+- [API 快速参考 — GrandInt](#api-快速参考--grandint)
+- [API 快速参考 — BigFraction](#api-快速参考--bigfraction)
+- [vs 原生 int / long / double 的比较](#vs-原生-int--long--double-的比较)
+- [使用建议与场景](#使用建议与场景)
+- [数学证明：有理数的整数放大性质及其扩充](#数学证明有理数的整数放大性质及其扩充)
+- [构建与运行（重复）](#构建与运行重复)
+
 ## 简介
 
 本仓库实现了任意精度大整数类型 `GrandInt`（位于 `RoslynMeow.Math.Number`代码库），以及基于它的有理数类型 `BigFraction`。
@@ -112,6 +130,80 @@ var f = BigFraction.FromDouble(0.1); //0.1 在 double 中并非精确1/10
 性能提示：
 - 尽量复用 `GrandInt` 实例的内部缓冲区（通过 API读取后再一次性操作），避免频繁在循环中创建大量临时 `GrandInt`/`BigFraction`。
 - 对于大量数值运算的热路径，考虑基准（Benchmarks 项目）并针对热点使用池化或本地优化。
+
+## 数学证明：有理数的整数放大性质及其扩充
+
+> 本节是 `BigFraction` / `GrandInt` 精确表示有理数的理论基础。原始 LaTeX 见 [`_Proofs/Proof.tex`](_Proofs/Proof.tex),编译版见 [`_Proofs/Proof.pdf`](_Proofs/Proof.pdf)。
+
+### 记号与补充约定
+
+- $\mathbb{Q}$ 表示有理数集,$\mathbb{Z}$ 表示整数集,$\mathbb{Z}_{+}$ 表示正整数集,$\mathbb{N}_0=\{0,1,2,\dots\}$。
+- 若 $n$ 为正整数,写其素因子分解 $n=\prod_{\pi}\pi^{e_\pi(n)}$,其中 $\pi$ 遍历素数。
+- 对素数 $\pi$,对整数 $n>0$ 定义 $v_\pi(n):=e_\pi(n)$;对有理数 $r=\frac{a}{b}$(互素表示)推广为 $v_\pi(r):=v_\pi(a)-v_\pi(b)$。
+- 对固定基数 $p\ge2$(不必为素数),关心是否存在 $k\in\mathbb{N}_0$ 使 $p^k q\in\mathbb{Z}$。
+
+### 定理 1(有理数的整数放大)
+
+**定理.** 对任意 $q\in\mathbb{Q}$,存在正整数 $K\in\mathbb{Z}_{+}$ 使得 $Kq\in\mathbb{Z}$。
+
+**证明.** 将 $q$ 表示为最简分数 $q=\frac{a}{b}$($a\in\mathbb{Z},\ b\in\mathbb{Z}_{+},\ \gcd(a,b)=1$)。取 $K=b$,则 $Kq=b\cdot\frac{a}{b}=a\in\mathbb{Z}$。∎
+
+### 定理 2(基 $p$ 的等价条件)
+
+**定理.** 设固定基数 $p\ge2$,令 $q=\frac{a}{b}$ 为最简分数。下列命题等价:
+
+1. 存在 $k\in\mathbb{N}_0$ 使得 $p^k q\in\mathbb{Z}$;
+2. 存在 $k\in\mathbb{N}_0$ 使得 $b\mid p^k$;
+3. $b$ 的所有素因子都出现在 $p$ 的素因子分解中:对任意素数 $\pi$,若 $v_\pi(b)>0$ 则 $v_\pi(p)>0$。
+
+特别地,当 $p$ 为素数时,上述等价于 $b=p^m$ 对某个 $m\in\mathbb{N}_0$。
+
+**证明.**
+
+- (1)$\Rightarrow$(2):若 $p^k q\in\mathbb{Z}$,则 $b\mid p^k a$;由 $\gcd(a,b)=1$ 得 $b\mid p^k$。
+- (2)$\Rightarrow$(1):若 $b\mid p^k$,则 $p^k q=p^k\frac{a}{b}\in\mathbb{Z}$。
+- (2)$\Leftrightarrow$(3):写 $p=\prod_\pi \pi^{v_\pi(p)}$、$b=\prod_\pi \pi^{v_\pi(b)}$。$b\mid p^k$ 等价于对每个素数 $\pi$ 有 $v_\pi(b)\le k\,v_\pi(p)$。若某 $\pi$ 满足 $v_\pi(b)>0$ 且 $v_\pi(p)=0$,右端恒为 $0$,矛盾;故必须有 $v_\pi(b)>0\Rightarrow v_\pi(p)>0$。反之,若对 $b$ 的每个素因子都有 $v_\pi(p)\ge1$,取
+
+$$k\ge \max_{\pi:\,v_\pi(b)>0}\left\lceil\frac{v_\pi(b)}{v_\pi(p)}\right\rceil,$$
+
+即可保证 $b\mid p^k$。∎
+
+### 最小的 $k$ 的显式公式
+
+设 $p$ 的素因子集合为 $\{\pi_1,\dots,\pi_r\}$,$v_{\pi_i}(p)=f_i\ge1$,并记 $e_i:=v_{\pi_i}(b)$(若某 $\pi_i$ 未出现在 $b$ 中则为 $0$)。若存在 $\pi\notin\{\pi_1,\dots,\pi_r\}$ 使 $v_\pi(b)>0$,则不存在使 $b\mid p^k$ 的 $k$;否则最小的 $k$ 为
+
+$$k_{\min}=\max_{1\le i\le r}\left\lceil\frac{e_i}{f_i}\right\rceil.$$
+
+当 $p$ 为素数时只有一项且 $f_1=1$,故 $k_{\min}=v_p(b)$,此时 $b$ 必为 $p$ 的幂。
+
+### 基下有限小数表示的等价性
+
+在基 $p$ 的位置表示中,右移小数点 $k$ 位相当于乘以 $p^k$,因此
+
+$$q\ \text{在基 }p\text{ 下有有限小数表示}\iff \exists k\in\mathbb{N}_0,\ p^k q\in\mathbb{Z}.$$
+
+结合定理 2:$q=a/b$ 在基 $p$ 下有有限小数表示,当且仅当 $b$ 的所有素因子都出现在 $p$ 的素因子分解中。对十进制($p=10$),即分母只含素因子 $2$ 与 $5$。
+
+### 关于推广到实数集的不可能性
+
+固定 $p\ge2$,定义 $S_p:=\{x\in\mathbb{R}:\exists k\in\mathbb{N}_0,\ p^k x\in\mathbb{Z}\}$。有 $S_p=\bigcup_{k\ge0}p^{-k}\mathbb{Z}$,每个 $p^{-k}\mathbb{Z}$ 可数,故 $S_p$ 可数;而 $\mathbb{R}$ 不可数(Cantor 对角线论证),所以 $S_p\neq\mathbb{R}$。具体反例:$\sqrt{2}$——若存在非零整数 $K$ 使 $K\sqrt2\in\mathbb{Z}$,则 $\sqrt2$ 为有理数,矛盾。
+
+**Cantor 对角线论证.** 若 $\mathbb{R}$ 可数,则可枚举所有实数;构造一个第 $n$ 位小数与枚举中第 $n$ 个数不同的新实数,产生矛盾,故 $\mathbb{R}$ 不可数,不可能包含于任何可数集。
+
+**实数的稠密性.** $\mathbb{Q}$ 虽可数,但在 $\mathbb{R}$ 中稠密:对任意 $x\in\mathbb{R},\varepsilon>0$,取 $n\in\mathbb{N}$ 使 $1/n<\varepsilon$,令 $k=\lfloor nx\rfloor$,则 $|x-k/n|<\varepsilon$。这说明任意小邻域内都有有理数,但不意味着所有实数都能写成分母为某固定形式的有理数。
+
+### 结论
+
+$$\forall q\in\mathbb{Q}\ \exists K\in\mathbb{Z}_{+}:\ Kq\in\mathbb{Z}.$$
+
+$$\text{设 }q=a/b\ (\text{最简}),\ p\ge2\text{ 固定,则}\quad
+\bigl(\exists k:\ p^k q\in\mathbb{Z}\bigr)\iff\bigl(\exists k:\ b\mid p^k\bigr)\iff\bigl(\forall\pi,\ v_\pi(b)>0\Rightarrow v_\pi(p)>0\bigr).$$
+
+### 参考资料
+
+- D. S. Dummit, R. M. Foote, *Abstract Algebra*(整环与分式域章节)。
+- T. W. Hungerford, *Algebra*(分式域与局部化)。
+- W. Rudin, *Principles of Mathematical Analysis*(实数与有理数、稠密性)。
 
 ## 构建与运行（重复）
 
